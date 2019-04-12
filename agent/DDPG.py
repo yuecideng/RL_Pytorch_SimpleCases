@@ -46,7 +46,7 @@ class Actor(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Linear):
                 m.weight.data = fanin_init(m.weight.data.size())
-        self.forward2.weight.data.uniform_(-0.003, 0.003)
+        self.linear2.weight.data.uniform_(-0.003, 0.003)
         
     def forward(self, x):
         

@@ -8,12 +8,6 @@ import matplotlib.pyplot as plt
 
 
 ###############################  TD3  ####################################
-def fanin_init(size, fanin=None):
-	fanin = fanin or size[0]
-	v = 1. / np.sqrt(fanin)
-	return torch.Tensor(size).uniform_(-v, v)
-
-
 class OrnsteinUhlenbeckActionNoise:
     '''Ornstein-Uhlenbeck process (Uhlenbeck & Ornstein, 1930) to generate 
     temporally random process for exploration 

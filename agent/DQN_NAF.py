@@ -6,16 +6,8 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
-PATH_TO_MODEL = '/home/waiyang/pana_RL_yueci/model_para/'
-PATH_TO_PLOT = '/home/waiyang/pana_RL_yueci/model_plot/'
 
 ###############################  DDPG  ####################################
-def fanin_init(size, fanin=None):
-	fanin = fanin or size[0]
-	v = 1. / np.sqrt(fanin)
-	return torch.Tensor(size).uniform_(-v, v)
-
-
 class OrnsteinUhlenbeckActionNoise:
     '''Ornstein-Uhlenbeck process (Uhlenbeck & Ornstein, 1930) to generate 
     temporally corre- lated exploration for exploration efficiency
@@ -110,7 +102,7 @@ class DQN_NAF(object):
             GAMMA = 0.9,     # reward discount  0.9
             TAU = 0.001,      # soft replacement  0.0001
             hidden_size = 256,
-            MEMORY_CAPACITY = 10000,
+            MEMORY_CAPACITY = 100000,
             BATCH_SIZE = 64,   #32      
             ):
         self.gama = GAMMA
@@ -128,8 +120,8 @@ class DQN_NAF(object):
         self.optim = optim.Adam(self.agent.parameters(), LR)
         self.loss_agent_list = []
 
-    def store_transition(self, s, a, r, s_):
-        transition = np.hstack((s, a, [r], s_))
+    def store_transition(self, s, a, r, s_, done):
+        transition = np.hstack((s, a, [r], s_, [done]))
         index = self.memory_counter % self.memory_size  # replace the old memory with new memory
         self.memory[index, :] = transition
         self.memory_counter += 1
@@ -186,21 +178,13 @@ class DQN_NAF(object):
         self.soft_update(self.agent_target, self.agent, self.tau)
         self.loss_agent_list.append(loss)
        
-    def save_model(self, model_name):
-        torch.save(self.agent.state_dict(), os.path.join(PATH_TO_MODEL, model_name, 'model.pth'))
-        torch.save(self.optim.state_dict(), os.path.join(PATH_TO_MODEL, model_name, 'optim.pth'))
-        
+    def save_model(self, model_dir, model_name):
+        torch.save(self.agent.state_dict(), os.path.join(model_dir, model_name, 'model.pth'))
+        torch.save(self.optim.state_dict(), os.path.join(model_dir, model_name, 'optim.pth'))
 
-    def plot_loss(self,model_name):
-        plt.figure()
-        plt.plot(np.arange(len(self.loss_agent_list)),self.loss_agent_list )
-        plt.ylabel('Loss')
-        plt.xlabel('training step')
-        plt.savefig(PATH_TO_PLOT+model_name+'loss.png')
-
-    def load_model(self,model_name):
-        self.agent.load_state_dict(torch.load(PATH_TO_MODEL+model_name+'model.pth'))
-        self.agent_target.load_state_dict(torch.load(PATH_TO_MODEL+model_name+'model.pth'))
-        self.optim.load_state_dict(torch.load(PATH_TO_MODEL+model_name+'optim.pth'))
+    def load_model(self, model_dir, model_name):
+        self.agent.load_state_dict(torch.load(model_dir+model_name+'model.pth'))
+        self.agent_target.load_state_dict(torch.load(model_dir+model_name+'model.pth'))
+        self.optim.load_state_dict(torch.load(Pmodel_dir+model_name+'optim.pth'))
 
 

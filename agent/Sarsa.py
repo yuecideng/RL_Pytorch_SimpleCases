@@ -1,7 +1,7 @@
 import numpy as np
+import pickle
 
-
-class QLearn:
+class Sarsa:
     def __init__(self, actions, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
         self.actions = actions  
         self.lr = learning_rate
@@ -26,7 +26,8 @@ class QLearn:
 
     def learn(self, s, a, r, s_):
         s, s_ = str(s), str(s_)
-        q_target = r + self.gamma * max([self.q_table.get((s_, a), 0.0) for a in self.actions])
+        a_ = self.choose_action(s_)
+        q_target = r + self.gamma * self.q_table.get((s_, a_), 0.0)
         q_predict = self.q_table.get((s, a), None)
         if q_predict is None:
             self.q_table[(s, a)] = r # next state is terminal
