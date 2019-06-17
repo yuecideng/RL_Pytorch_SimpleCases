@@ -1,6 +1,7 @@
 import gym
 from agent.DQN import DeepQNetwork
 import numpy as np 
+import argparse
 import matplotlib.pyplot as plt
 
 
@@ -31,9 +32,16 @@ def train(RL, env):
     RL.plot_Q_value('Q_value_figure', 'DQN')
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--double', default=False)
+    parser.add_argument('--prioritized', default=False)
+    parser.add_argument('--dueling', default=False)
+    args = parser.parse_args()
+
     env = gym.make('Pendulum-v0')
     env = env.unwrapped
     env.seed(1)
     ACTION_SPACE = 11
-    agent = DeepQNetwork(ACTION_SPACE, 3)
+    agent = DeepQNetwork(ACTION_SPACE, 3, use_double_q=args.double, 
+    prioritized=args.prioritized, dueling=args.dueling)
     train(agent, env)

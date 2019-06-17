@@ -1,14 +1,20 @@
 from environment.tictac_env import TicTac
 from agent.QLearn import QLearn
-#from agent.Sarsa import Sarsa
+from agent.Sarsa import Sarsa
+import argparse
 import copy
 import os
 
 
-def train():
+def train(args):
     env = TicTac()
-    model1 = QLearn(actions=list(range(env.n_actions)))
-    model2 = QLearn(actions=list(range(env.n_actions)))
+    if args.algorithm == 'Q-learning': 
+        model1 = QLearn(actions=list(range(env.n_actions))) 
+        model2 = QLearn(actions=list(range(env.n_actions))) 
+    if args.algorithm == 'Sarsa': 
+        model1 = Sarsa(actions=list(range(env.n_actions)))
+        model2 = Sarsa(actions=list(range(env.n_actions)))
+
     first_win, second_win, tie = 0, 0, 0
     for epoch in range(200000):
         state1 = env.reset()
@@ -59,7 +65,7 @@ def train():
     model1.save_table('Q_table', 'Q_learn1')
     model2.save_table('Q_table', 'Q_learn2')
 
-def play():
+def play(args):
     print('start to play the game')
     print('################')
     print(' ' + '6' + ' | ' + '7' + ' | ' + '8')
@@ -74,9 +80,8 @@ def play():
     assert mode == 'first' or mode == 'second', 'please type first or second'
     
     env_play = TicTac()
-    model = QLearn(actions=list(range(env_play.n_actions)))
-    #model = Sarsa(actions=list(range(env_play.n_actions)))
-    #model.load_table('Q_table', 'Sarsa')
+    if args.algorithm == 'Q-learning': model = QLearn(actions=list(range(env.n_actions))) 
+    if args.algorithm == 'Sarsa': model = Sarsa(actions=list(range(env.n_actions)))
     if mode == 'first':
         model.load_table('Q_table', 'Q_learn2')
         board = env_play.reset()
@@ -152,6 +157,10 @@ def human_input(board):
 
 
 if __name__ == "__main__":
-    #main()
-    train()
-    play() 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--algorithm', default='Q-learning')
+    args = parser.parse_args()
+    assert args.algorithm == 'Q-learning' or args.algorithm == 'Sarsa', 'Please type Q-learning or Sarsa'
+
+    train(args)
+    play(args) 

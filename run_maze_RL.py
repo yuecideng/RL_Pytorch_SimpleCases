@@ -1,10 +1,11 @@
 from environment.maze_env import Maze
 from agent.QLearn import QLearn
 from agent.Sarsa import Sarsa
+import argparse
 import os
 
 def update():
-    for episode in range(1):
+    for episode in range(1000):
         # initial observation
         observation = env.reset()
 
@@ -17,7 +18,7 @@ def update():
 
             # RL take action and get next observation and reward
             observation_, reward, done = env.step(action)
-            print(observation)
+
             # RL learn from this transition
             RL.learn(observation, action, reward, observation_)
 
@@ -34,8 +35,14 @@ def update():
     env.destroy()
 
 if __name__ == "__main__":
-    env = Maze()
-    RL = QLearn(actions=list(range(env.n_actions)))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--algorithm', default='Q-learning')
+    args = parser.parse_args()
 
+    assert args.algorithm == 'Q-learning' or args.algorithm == 'Sarsa', 'Please type Q-learning or Sarsa'
+    if args.algorithm == 'Q-learning': RL = QLearn(actions=list(range(env.n_actions))) 
+    if args.algorithm == 'Sarsa': RL = Sarsa(actions=list(range(env.n_actions)))
+        
+    env = Maze()
     env.after(100, update)
     env.mainloop()
