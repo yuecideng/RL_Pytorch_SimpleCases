@@ -39,10 +39,10 @@ if __name__ == "__main__":
     parser.add_argument('--algorithm', default='Q-learning')
     args = parser.parse_args()
 
+    env = Maze()
     assert args.algorithm == 'Q-learning' or args.algorithm == 'Sarsa', 'Please type Q-learning or Sarsa'
     if args.algorithm == 'Q-learning': RL = QLearn(actions=list(range(env.n_actions))) 
     if args.algorithm == 'Sarsa': RL = Sarsa(actions=list(range(env.n_actions)))
         
-    env = Maze()
     env.after(100, update)
     env.mainloop()

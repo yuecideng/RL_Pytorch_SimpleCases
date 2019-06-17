@@ -3,7 +3,7 @@ This repository provides typical and pupolar reinforcement learning algorithms u
 
 Some simple environments are provided to test the performance of RL algorithms which are as follow:
 
-- **maze** and **tic-tac** for testing **Q-learning** and **Sarsa**
+- **maze** and **tic-tac** for testing **Q-learning** and **Sarsa** 
 - **pendulum** for testing **DQN**
 - **robot** for testing **DDPG** and **TD3**
 

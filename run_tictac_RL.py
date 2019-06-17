@@ -80,8 +80,8 @@ def play(args):
     assert mode == 'first' or mode == 'second', 'please type first or second'
     
     env_play = TicTac()
-    if args.algorithm == 'Q-learning': model = QLearn(actions=list(range(env.n_actions))) 
-    if args.algorithm == 'Sarsa': model = Sarsa(actions=list(range(env.n_actions)))
+    if args.algorithm == 'Q-learning': model = QLearn(actions=list(range(env_play.n_actions))) 
+    if args.algorithm == 'Sarsa': model = Sarsa(actions=list(range(env_play.n_actions)))
     if mode == 'first':
         model.load_table('Q_table', 'Q_learn2')
         board = env_play.reset()
