@@ -36,5 +36,5 @@ An Introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPR
 # Acknowledgment
 Some environments used in this repository are referenced from [莫烦 Python](https://morvanzhou.github.io/tutorials/).
 
-![maze](https://i.imgur.com/W5oh83p.jpg)
+![maze](https://github.com/yuecideng/RL-Pytorch-simple_cases/blob/master/figures/pendulum.jpg)
 
