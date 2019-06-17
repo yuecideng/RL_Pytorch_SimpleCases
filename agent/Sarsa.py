@@ -1,5 +1,7 @@
 import numpy as np
 import pickle
+import os
+
 
 class Sarsa:
     def __init__(self, actions, learning_rate=0.01, reward_decay=0.9, e_greedy=0.9):
@@ -15,12 +17,12 @@ class Sarsa:
         if explore:
             if np.random.uniform() < self.epsilon:
                 q = np.array([self.q_table.get((s, a), 0.0) for a in self.actions])
-                action = np.random.choice(q[q == np.max(q)].index)
+                action = np.random.choice(np.argwhere(q==np.max(q)).flatten())
             else:
                 action = np.random.choice(self.actions)
         else:
             q = np.array([self.q_table.get((s, a), 0.0) for a in self.actions])
-            action = np.random.choice(q[q == np.max(q)].index)
+            action = np.random.choice(np.argwhere(q==np.max(q)).flatten())
 
         return action
 
@@ -35,9 +37,11 @@ class Sarsa:
             self.q_table[(s, a)] = q_predict + self.lr * (q_target - q_predict)  # next state is not terminal
 
     def save_table(self,model_dir,model_name):
-        with open(model_dir+model_name+'QLearn_table.pkl', 'wb') as f:
+        if not os.path.exists(model_dir+'/'+model_name):
+            os.makedirs(model_dir+'/'+model_name)
+        with open(model_dir+'/'+model_name+'/'+'/QLearn_table.pkl', 'wb') as f:
             pickle.dump(self.q_table, f, pickle.HIGHEST_PROTOCOL)
 
     def load_table(self,model_dir,model_name):  
-        with open(model_dir+model_name+'QLearn_table.pkl', 'rb') as f:
+        with open(model_dir+'/'+model_name+'/'+'/QLearn_table.pkl', 'rb') as f:
             self.q_table = pickle.load(f)

@@ -7,7 +7,6 @@ import os
 import matplotlib.pyplot as plt
 
 
-###############################  DDPG  ####################################
 class OrnsteinUhlenbeckActionNoise:
     '''Ornstein-Uhlenbeck process (Uhlenbeck & Ornstein, 1930) to generate 
     temporally corre- lated exploration for exploration efficiency
@@ -23,10 +22,10 @@ class OrnsteinUhlenbeckActionNoise:
 	    self.X = np.ones(self.action_dim) * self.mu
 
     def sample(self):
-		dx = self.theta * (self.mu - self.X)
-		dx = dx + self.sigma * np.random.randn(len(self.X))
-		self.X = self.X + dx
-		return self.X
+	    dx = self.theta * (self.mu - self.X)
+	    dx = dx + self.sigma * np.random.randn(len(self.X))
+	    self.X = self.X + dx
+	    return self.X
 
 
 class Policy(nn.Module):
@@ -149,7 +148,7 @@ class DQN_NAF(object):
         Copies the parameters from source network to target network
         """
         for target_param, param in zip(target.parameters(), source.parameters()):
-		    target_param.data.copy_(param.data)
+    	    target_param.data.copy_(param.data)
 
     def Learn(self):
         if self.memory_counter > self.memory_size:
@@ -179,6 +178,8 @@ class DQN_NAF(object):
         self.loss_agent_list.append(loss)
        
     def save_model(self, model_dir, model_name):
+        if not os.path.exists(model_dir+'/'+model_name):
+            os.makedirs(model_dir+'/'+model_name)
         torch.save(self.agent.state_dict(), os.path.join(model_dir, model_name, 'model.pth'))
         torch.save(self.optim.state_dict(), os.path.join(model_dir, model_name, 'optim.pth'))
 

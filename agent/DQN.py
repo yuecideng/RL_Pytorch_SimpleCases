@@ -6,24 +6,19 @@ import torch.nn.functional as F
 import os
 
 
-'''
-Build neural network: The structure can be modified in this class
-'n_actions' is the output action vector
-'n_features' is the input state vector
-'''
 class NN_model(nn.Module):
 
-    def __init__(self, n_features, n_actions, dueling):
+    def __init__(self, state_dim, action_dim, dueling, n_hidden):
         super(NN_model, self).__init__()
         self.dueling = dueling
-        self.forward1 = nn.Linear(n_features, 30)
+        self.forward1 = nn.Linear(state_dim, n_hidden)
         self.Relu = nn.ReLU()
         # weather to use dueling DQN
         if self.dueling:
-            self.Value = nn.Linear(30, 1)
-            self.Advantage = nn.Linear(30, n_actions)
+            self.Value = nn.Linear(n_hidden, 1)
+            self.Advantage = nn.Linear(n_hidden, action_dim)
         else:
-            self.forward2 = nn.Linear(30, n_actions)
+            self.forward2 = nn.Linear(n_hidden, action_dim)
 
         for m in self.modules():
             if isinstance(m, nn.Linear):
@@ -137,13 +132,14 @@ class Memory(object):  # stored as ( s, a, r, s_ ) in SumTree
 class DeepQNetwork:
     def __init__(
             self,
-            n_actions,
-            n_features,
+            action_dim,
+            state_dim,
+            n_hidden=64,
             learning_rate=0.001,
             reward_decay=0.9,
             e_greedy=0.9,
             replace_target_iter=300,
-            memory_size=500,
+            memory_size=1000,
             batch_size=32,
             e_greedy_increment=None,
             use_pretrained=False,
@@ -152,8 +148,9 @@ class DeepQNetwork:
             dueling=False,
             cuda=False
     ):
-        self.n_actions = n_actions
-        self.n_features = n_features
+        self.action_dim = action_dim
+        self.state_dim = state_dim
+        self.n_hidden = n_hidden
         self.lr = learning_rate
         self.gamma = reward_decay
         self.epsilon_max = e_greedy
@@ -182,14 +179,14 @@ class DeepQNetwork:
         if self.prioritized:
             self.memory = Memory(capacity=memory_size)
         else:
-            self.memory = np.zeros((self.memory_size, n_features*2+2))
+            self.memory = np.zeros((self.memory_size, state_dim*2+2))
 
         # define target_net and eval_net
-        self.target_net = NN_model(self.n_features, self.n_actions, self.dueling)
+        self.target_net = NN_model(self.state_dim, self.action_dim, self.dueling, self.n_hidden)
         for param in self.target_net.parameters():
             param.requires_grad = False
 
-        self.eval_net = NN_model(self.n_features, self.n_actions, self.dueling)
+        self.eval_net = NN_model(self.state_dim, self.action_dim, self.dueling, self.n_hidden)
 
         if self.cuda:
             self.target_net = self.model_to_cuda(self.target_net)
@@ -203,7 +200,7 @@ class DeepQNetwork:
         self.criterion = nn.MSELoss(reduction='elementwise_mean')
         self.optimizer = optim.RMSprop(self.eval_net.parameters(), lr=self.lr)
 
-        self.loss_his = []
+        self.Q_value = []
 
     def store_transition(self, s, a, r, s_):
         if self.prioritized:    # prioritized replay
@@ -231,7 +228,7 @@ class DeepQNetwork:
                 action = action_val.detach().numpy()
             action = np.argmax(action)
         else:
-            action = np.random.randint(0, self.n_actions)
+            action = np.random.randint(0, self.action_dim)
 
         return action
 
@@ -240,7 +237,7 @@ class DeepQNetwork:
         if self.learn_step_counter % self.replace_target_iter == 0:
             parameter = self.eval_net.state_dict()
             self.target_net.load_state_dict(parameter, strict=True)
-            print('\ntarget_params_replaced\n')
+            #print('\ntarget_params_replaced\n')
 
         if self.prioritized:
             tree_idx, batch_memory, ISWeights = self.memory.sample(self.batch_size)
@@ -257,10 +254,10 @@ class DeepQNetwork:
             batch_memory = self.memory[sample_index, :]
             batch_memory = torch.from_numpy(batch_memory)
 
-        state = batch_memory[:, :self.n_features].float()
-        state_ = batch_memory[:, -self.n_features:].float()
-        action = batch_memory[:, self.n_features]
-        reward = batch_memory[:, self.n_features + 1].float()
+        state = batch_memory[:, :self.state_dim].float()
+        state_ = batch_memory[:, -self.state_dim:].float()
+        action = batch_memory[:, self.state_dim]
+        reward = batch_memory[:, self.state_dim + 1].float()
         if self.cuda:
             state = self.tensor_to_cuda(state)
             state_ = self.tensor_to_cuda(state_)
@@ -269,12 +266,12 @@ class DeepQNetwork:
 
         # compute value of q_eval
         index = action
-        mask = self.build_mask(self.n_actions, index)
+        mask = self.build_mask(self.action_dim, index)
         q_eval = torch.masked_select(self.eval_net(state), mask)
 
         # compute value of q_target
         if self.use_double_q:
-            index_t = self.build_mask(self.n_actions, torch.argmax(self.eval_net(state_), dim=1))
+            index_t = self.build_mask(self.action_dim, torch.argmax(self.eval_net(state_), dim=1))
             q_target = reward + self.gamma * torch.masked_select(self.target_net(state_), index_t) 
                                                                                         
         else:
@@ -296,24 +293,23 @@ class DeepQNetwork:
         loss.backward()
         self.optimizer.step()
 
-        #self.loss_his.append(loss)
-        self.loss_his.append(loss)
+        self.Q_value.append(torch.mean(q_eval))
 
         # increasing epsilon
         self.epsilon = self.epsilon + self.epsilon_increment if self.epsilon < self.epsilon_max else self.epsilon_max
         self.learn_step_counter += 1
 
     # mask is an index matrix that refers to action
-    def build_mask(self, n_actions, index):
+    def build_mask(self, action_dim, index):
         batch_size = index.size()[0]
         index = index.view(1, -1)
         if self.cuda:
             index = index.to(torch.uint8).cpu()
-            mask = torch.zeros(batch_size, n_actions)
+            mask = torch.zeros(batch_size, action_dim)
             mask = self.tensor_to_cuda(mask)
         else:
             index = index.to(torch.uint8)
-            mask = torch.zeros(batch_size, n_actions)
+            mask = torch.zeros(batch_size, action_dim)
         for i in range(batch_size):
             mask[i, index[0, i].numpy()] = 1
 
@@ -325,15 +321,28 @@ class DeepQNetwork:
     def tensor_to_cuda(self, tensor):
         return tensor.to(self.cuda_device)
 
-    def plot_loss(self):
+    def plot_Q_value(self,model_dir,model_name):
         import matplotlib.pyplot as plt
-        plt.plot(np.arange(len(self.loss_his)), self.loss_his)
-        plt.ylabel('Loss')
+        plt.figure()
+        plt.plot(np.arange(len(self.Q_value)), self.Q_value)
+        plt.ylabel('Q_value')
         plt.xlabel('training steps')
-        plt.show()
+        if not os.path.exists(model_dir+'/'+model_name):
+            os.makedirs(model_dir+'/'+model_name)
+        plt.savefig(model_dir+'/'+model_name+'/'+'Q_value.png')
+        plt.close()
 
-    def save_para(self):
-        torch.save(self.eval_net.parameters(), os.path.join(self.path_to_para, 'model_para' + '.pth'))
+    def save_model(self,model_dir,model_name):
+        if not os.path.exists(model_dir+'/'+model_name):
+            os.makedirs(model_dir+'/'+model_name)
+        torch.save(self.eval_net.state_dict() , model_dir+'/'+model_name+'/'+'DQN.pth')
+        torch.save(self.optimizer.state_dict(), model_dir+'/'+model_name+'/'+'optim.pth')
+        
+    def load_model(self,model_dir,model_name):
+        self.eval_net.load_state_dict(torch.load(model_dir+'/'+model_name+'/'+'DQN.pth'))
+        self.target_net.load_state_dict(torch.load(model_dir+'/'+model_name+'/'+'DQN.pth'))
+        self.optimizer.load_state_dict(torch.load(model_dir+'/'+model_name+'/'+'optim.pth'))
+
 
 
 

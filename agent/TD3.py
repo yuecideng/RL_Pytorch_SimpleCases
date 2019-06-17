@@ -23,10 +23,10 @@ class OrnsteinUhlenbeckActionNoise:
 	    self.X = np.ones(self.action_dim) * self.mu
 
     def sample(self):
-		dx = self.theta * (self.mu - self.X)
-		dx = dx + self.sigma * np.random.randn(len(self.X))
-		self.X = self.X + dx
-		return self.X
+        dx = self.theta * (self.mu - self.X)
+        dx = dx + self.sigma * np.random.randn(len(self.X))
+        self.X = self.X + dx
+        return self.X
 
 
 class Actor(nn.Module):
@@ -180,7 +180,7 @@ class TD3(object):
         Copies the parameters from network to target network entirely
         """
         for target_param, param in zip(target.parameters(), source.parameters()):
-		    target_param.data.copy_(param.data)
+            target_param.data.copy_(param.data)
 
     def Learn(self):
         if self.memory_counter > self.memory_size:
@@ -233,32 +233,36 @@ class TD3(object):
             self.soft_update(self.critic_target, self.critic, self.tau)
        
     def save_model(self,model_dir,model_name):
-        torch.save(self.actor.state_dict(), model_dir+model_name+'actor.pth')
-        torch.save(self.critic.state_dict(), model_dir+model_name+'critic.pth')
-        torch.save(self.optim_a.state_dict(), model_dir+model_name+'optim_a.pth')
-        torch.save(self.optim_c.state_dict(), model_dir+model_name+'optim_c.pth')
+        if not os.path.exists(model_dir+'/'+model_name):
+            os.makedirs(model_dir+'/'+model_name)
+        torch.save(self.actor.state_dict(), model_dir+'/'+model_name+'/'+'actor.pth')
+        torch.save(self.critic.state_dict(), model_dir+'/'+model_name+'/'+'critic.pth')
+        torch.save(self.optim_a.state_dict(), model_dir+'/'+model_name+'/'+'optim_a.pth')
+        torch.save(self.optim_c.state_dict(), model_dir+'/'+model_name+'/'+'optim_c.pth')
 
     def load_model(self,model_dir,model_name):
-        self.actor_target.load_state_dict(torch.load(model_dir+model_name+'actor.pth'))
-        self.critic_target.load_state_dict(torch.load(model_dir+model_name+'critic.pth'))
-        self.actor.load_state_dict(torch.load(model_dir+model_name+'actor.pth'))
-        self.critic.load_state_dict(torch.load(model_dir+model_name+'critic.pth'))
-        self.optim_a.load_state_dict(torch.load(model_dir+model_name+'optim_a.pth'))
-        self.optim_c.load_state_dict(torch.load(model_dir+model_name+'optim_c.pth'))
+        self.actor_target.load_state_dict(torch.load(model_dir+'/'+model_name+'/'+'actor.pth'))
+        self.critic_target.load_state_dict(torch.load(model_dir+'/'+model_name+'/'+'critic.pth'))
+        self.actor.load_state_dict(torch.load(model_dir+'/'+model_name+'/'+'actor.pth'))
+        self.critic.load_state_dict(torch.load(model_dir+'/'+model_name+'/'+'critic.pth'))
+        self.optim_a.load_state_dict(torch.load(model_dir+'/'+model_name+'/'+'optim_a.pth'))
+        self.optim_c.load_state_dict(torch.load(model_dir+'/'+model_name+'/'+'optim_c.pth'))
 
-    def plot_loss(self,model_dir,model_name):
+    def plot_Q_value(self,model_dir,model_name):
+        if not os.path.exists(model_dir+'/'+model_name):
+            os.makedirs(model_dir+'/'+model_name)
         plt.figure()
         plt.plot(np.arange(len(self.critic1_q)),self.critic1_q)
         plt.ylabel('Q value')
         plt.xlabel('training step')
-        plt.savefig(model_dir+model_name+'Q_critic1.png')
+        plt.savefig(model_dir+'/'+model_name+'/'+'Q_critic1.png')
         plt.close()
 
         plt.figure()
         plt.plot(np.arange(len(self.critic2_q)),self.critic2_q)
         plt.ylabel('Q value')
         plt.xlabel('training step')
-        plt.savefig(model_dir+model_name+'Q_critic2.png')
+        plt.savefig(model_dir+'/'+model_name+'/'+'Q_critic2.png')
         plt.close()
 
     def mode(self, mode='train'):
