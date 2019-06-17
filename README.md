@@ -2,7 +2,6 @@
 This repository provides typical and pupolar reinforcement learning algorithms using Python and Pytorch, including **Q-learning**, **Sarsa**, **DQN (Double-DQN,Dueling-DQN, DQN with Prioritized Experience Replay)**, **DDPG** and **TD3**.
 
 Some simple environments are provided to test the performance of RL algorithms which are as follow:
-![maze](https://github.com/yuecideng/RL-Pytorch-simple_cases/figures/maze.jpg)
 - **maze** and **tic-tac** for testing **Q-learning** and **Sarsa** 
 - **pendulum** for testing **DQN**
 - **robot** for testing **DDPG** and **TD3**
@@ -37,5 +36,5 @@ An Introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPR
 # Acknowledgment
 Some environments used in this repository are referenced from [莫烦 Python](https://morvanzhou.github.io/tutorials/).
 
-
+![maze](https://i.imgur.com/W5oh83p.jpg)
 
