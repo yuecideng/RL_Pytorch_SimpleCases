@@ -36,5 +36,11 @@ An Introduction](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPR
 # Acknowledgment
 Some environments used in this repository are referenced from [莫烦 Python](https://morvanzhou.github.io/tutorials/).
 
-![maze](https://github.com/yuecideng/RL-Pytorch-simple_cases/blob/master/figures/pendulum.jpg)
+![maze](https://github.com/yuecideng/RL-Pytorch-simple_cases/blob/master/figures/maze.jpg)
+
+![tic-tac](https://github.com/yuecideng/RL-Pytorch-simple_cases/blob/master/figures/tic_tac.jpg)
+
+![pendulum](https://github.com/yuecideng/RL-Pytorch-simple_cases/blob/master/figures/pendulum.jpg)
+
+![robot](https://github.com/yuecideng/RL-Pytorch-simple_cases/blob/master/figures/robot.jpg)
 
